@@ -79,6 +79,14 @@ async function run() {
 			res.send(result);
 		});
 
+		// add new product api
+		app.post("/products", async (req, res) => {
+			const doc = req.body;
+			const result = await productsDB.insertOne(doc);
+			console.log(`A document was inserted with the _id: ${result.insertedId}`);
+			res.send(result);
+		});
+
 		// Product delete api
 		app.delete("/products/:id", async (req, res) => {
 			const id = req.params.id;
