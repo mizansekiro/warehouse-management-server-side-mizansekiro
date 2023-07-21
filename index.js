@@ -35,6 +35,7 @@ async function run() {
 
 		const productsDB = client.db("warehouse").collection("products");
 
+		// all products api
 		app.get("/products", async (req, res) => {
 			// const page = parseInt(req.query.p);
 			// const size = parseInt(req.query.s);
@@ -46,12 +47,34 @@ async function run() {
 			res.send(products);
 		});
 
+		// single product details api
 		app.get("/products/:id", async (req, res) => {
 			const id = req.params.id;
 			const query = { _id: new ObjectId(id) };
 			const cursor = productsDB.find(query);
 			const products = await cursor.toArray();
 			res.send(products);
+		});
+
+		// Delivered and restock api
+		app.put("/products/:id", async (req, res) => {
+			const id = req.params.id;
+			const stockNumber = req.body.newNumber;
+			const deliveredNumber = `${
+				req.body.delivered === undefined
+					? req.body.newDelivered
+					: req.body.delivered
+			}`;
+			const query = { _id: new ObjectId(id) };
+
+			const updateDoc = {
+				$set: {
+					stock: stockNumber,
+					delivered: deliveredNumber,
+				},
+			};
+			const result = await productsDB.updateOne(query, updateDoc);
+			res.send(result);
 		});
 	} finally {
 	}
