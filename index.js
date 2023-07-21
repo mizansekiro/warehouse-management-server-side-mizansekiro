@@ -69,7 +69,6 @@ async function run() {
 					: req.body.delivered
 			}`;
 			const query = { _id: new ObjectId(id) };
-
 			const updateDoc = {
 				$set: {
 					stock: stockNumber,
@@ -77,6 +76,14 @@ async function run() {
 				},
 			};
 			const result = await productsDB.updateOne(query, updateDoc);
+			res.send(result);
+		});
+
+		// Product delete api
+		app.delete("/products/:id", async (req, res) => {
+			const id = req.params.id;
+			const query = { _id: new ObjectId(id) };
+			const result = await productsDB.deleteOne(query);
 			res.send(result);
 		});
 	} finally {
