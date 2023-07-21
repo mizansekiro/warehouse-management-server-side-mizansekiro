@@ -45,6 +45,14 @@ async function run() {
 
 			res.send(products);
 		});
+
+		app.get("/products/:id", async (req, res) => {
+			const id = req.params.id;
+			const query = { _id: new ObjectId(id) };
+			const cursor = productsDB.find(query);
+			const products = await cursor.toArray();
+			res.send(products);
+		});
 	} finally {
 	}
 }
