@@ -37,12 +37,15 @@ async function run() {
 
 		// all products api
 		app.get("/products", async (req, res) => {
-			// const page = parseInt(req.query.p);
-			// const size = parseInt(req.query.s);
-			// console.log(page, size);
+			const page = parseInt(req.query.p);
+			const size = parseInt(req.query.s);
+			console.log(page, size);
 			const query = {};
 			const cursor = productsDB.find(query);
-			const products = await cursor.toArray();
+			const products = await cursor
+				.skip(page * size)
+				.limit(size)
+				.toArray();
 
 			res.send(products);
 		});
