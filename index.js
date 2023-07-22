@@ -10,9 +10,8 @@ app.use(express.json());
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 //password monogo: M6M8SHFJMkje90x4
 // userName : mongodbuser1
-const uri = "mongodb://127.0.0.1:27017/";
-// const uri =
-// 	"mongodb+srv://mongodbuser1:M6M8SHFJMkje90x4@cluster0.yy39k.mongodb.net/?retryWrites=true&w=majority";
+// const uri = "mongodb://127.0.0.1:27017/";
+const uri = `mongodb+srv://${process.env.BD_USERNAME}:${process.env.BD_PASSWORD}@cluster0.yy39k.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -35,7 +34,7 @@ async function run() {
 
 		const productsDB = client.db("warehouse").collection("products");
 
-		// all products api
+		// all products get api
 		app.get("/products", async (req, res) => {
 			const page = parseInt(req.query.p);
 			const size = parseInt(req.query.s);
@@ -50,7 +49,7 @@ async function run() {
 			res.send(products);
 		});
 
-		// single product details api
+		// single product details get api
 		app.get("/products/:id", async (req, res) => {
 			const id = req.params.id;
 			const query = { _id: new ObjectId(id) };
@@ -59,7 +58,7 @@ async function run() {
 			res.send(products);
 		});
 
-		// Delivered and restock api
+		// Delivered and restock update api
 		app.put("/products/:id", async (req, res) => {
 			const id = req.params.id;
 			const stockNumber = req.body.newNumber;
@@ -79,12 +78,28 @@ async function run() {
 			res.send(result);
 		});
 
-		// add new product api
+		// add new product post api
 		app.post("/products", async (req, res) => {
 			const doc = req.body;
 			const result = await productsDB.insertOne(doc);
 			console.log(`A document was inserted with the _id: ${result.insertedId}`);
 			res.send(result);
+		});
+
+		// use base product get api
+		app.get("/product", async (req, res) => {
+			let query = {};
+			const email = req.query.e;
+			if (email) {
+				query = {
+					userEmail: email,
+				};
+			}
+			const cursor = productsDB.find(query);
+			const products = await cursor.toArray();
+
+			res.send(products);
+			console.log(email);
 		});
 
 		// Product delete api
@@ -99,7 +114,7 @@ async function run() {
 }
 run().catch(console.dir);
 
-const admin = { adminName: "Mizan" };
+const admin = "Assignment warehouse management server is Running...";
 app.get("/", (req, res) => {
 	res.send(admin);
 });
