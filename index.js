@@ -10,8 +10,8 @@ app.use(express.json());
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 //password monogo: M6M8SHFJMkje90x4
 // userName : mongodbuser1
-// const uri = "mongodb://127.0.0.1:27017/";
-const uri = `mongodb+srv://${process.env.BD_USERNAME}:${process.env.BD_PASSWORD}@cluster0.yy39k.mongodb.net/?retryWrites=true&w=majority`;
+const uri = "mongodb://127.0.0.1:27017/";
+// const uri = `mongodb+srv://${process.env.BD_USERNAME}:${process.env.BD_PASSWORD}@cluster0.yy39k.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -33,12 +33,12 @@ async function run() {
 		);
 
 		const productsDB = client.db("warehouse").collection("products");
+		const reviewDB = client.db("warehouse").collection("review");
 
 		// all products get api
 		app.get("/products", async (req, res) => {
 			const page = parseInt(req.query.p);
 			const size = parseInt(req.query.s);
-			console.log(page, size);
 			const query = {};
 			const cursor = productsDB.find(query);
 			const products = await cursor
@@ -107,6 +107,24 @@ async function run() {
 			const id = req.params.id;
 			const query = { _id: new ObjectId(id) };
 			const result = await productsDB.deleteOne(query);
+			res.send(result);
+		});
+
+		// added user review post api
+		app.post("/review/:id", async (req, res) => {
+			const id = req.params.id;
+			const doc = req.body;
+			const query = {};
+			const result = await reviewDB.insertOne(doc);
+			res.send(result);
+		});
+
+		// added user review get api
+		app.get("/review", async (req, res) => {
+			const query = {};
+			const cursor = reviewDB.find(query);
+			const result = await cursor.toArray();
+
 			res.send(result);
 		});
 	} finally {
