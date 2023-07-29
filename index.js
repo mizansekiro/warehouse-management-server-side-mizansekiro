@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const jwt = require("jsonwebtoken");
 const app = express();
 const port = process.env.PORT || 5000;
 require("dotenv").config();
@@ -7,11 +9,28 @@ require("dotenv").config();
 app.use(cors());
 app.use(express.json());
 
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+//verify jwt token
+function verifyJWT(req, res, next) {
+	const authHeader = req.headers.authorization;
+	console.log(authHeader);
+	if (!authHeader) {
+		return res.send({ error: true, massage: "unauthorized access" });
+	}
+	const token = authHeader.split(" ")[1];
+	console.log(token);
+	jwt.verify(token, process.env.ACCESS_TOKEN_KEY, function (err, decoded) {
+		if (err) {
+			res.status(401).send({ error: true, massage: "unauthorized access" });
+		}
+		req.decoded = decoded;
+	});
+
+	next();
+}
 //password monogo: M6M8SHFJMkje90x4
 // userName : mongodbuser1
-const uri = "mongodb://127.0.0.1:27017/";
-// const uri = `mongodb+srv://${process.env.BD_USERNAME}:${process.env.BD_PASSWORD}@cluster0.yy39k.mongodb.net/?retryWrites=true&w=majority`;
+// const uri = "mongodb://127.0.0.1:27017/";
+const uri = `mongodb+srv://${process.env.BD_USERNAME}:${process.env.BD_PASSWORD}@cluster0.yy39k.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -34,6 +53,16 @@ async function run() {
 
 		const productsDB = client.db("warehouse").collection("products");
 		const reviewDB = client.db("warehouse").collection("review");
+
+		// make a jwt token
+		app.post("/jwt", (req, res) => {
+			const user = req.body;
+			const token = jwt.sign(user, process.env.ACCESS_TOKEN_KEY, {
+				expiresIn: "1hr",
+			});
+			res.send({ token });
+			console.log(user);
+		});
 
 		// all products get api
 		app.get("/products", async (req, res) => {
@@ -87,7 +116,14 @@ async function run() {
 		});
 
 		// use base product get api
-		app.get("/product", async (req, res) => {
+		app.get("/product", verifyJWT, async (req, res) => {
+			const decoded = req.decoded;
+			console.log(decoded);
+
+			if (decoded?.email !== req.query.e) {
+				res.status(403).send({ massage: "unauthorized access" });
+			}
+
 			let query = {};
 			const email = req.query.e;
 			if (email) {
