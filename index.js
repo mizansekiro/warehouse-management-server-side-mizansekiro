@@ -63,6 +63,10 @@ async function run() {
 			res.send({ token });
 			console.log(user);
 		});
+		const user = { name: "mizan" };
+		app.get("/name", (req, res) => {
+			res.send(user);
+		});
 
 		// all products get api
 		app.get("/products", async (req, res) => {
